@@ -129,10 +129,7 @@ class Model:
             present.append("ONNX")
             try:
                 self.model_type = Model.MODEL_TYPES.ONNX
-                providers = ["CPUExecutionProvider"]
-                if "CUDAExecutionProvider" in ort.get_available_providers():
-                    providers.insert(0, "CUDAExecutionProvider")
-                self.model = ort.InferenceSession(str(model_path), providers=providers)
+                self.model = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
                 return
             except Exception as e:
                 if str(model_path).endswith(".onnx"):
@@ -156,6 +153,9 @@ class Model:
         if self.model_type == Model.MODEL_TYPES.TENSORFLOW:
             return {k: v.numpy() for k, v in cast(tf.keras.Model, self.model(x)).items()}
         elif self.model_type == Model.MODEL_TYPES.COREML:
+            print(f"isfinite: {np.all(np.isfinite(x))}", flush=True)
+            print(f"shape: {x.shape}", flush=True)
+            print(f"dtype: {x.dtype}", flush=True)
             result = cast(ct.models.MLModel, self.model).predict({"input_2": x})
             return {
                 "note": result["Identity_1"],
@@ -423,6 +423,7 @@ def predict(
     melodia_trick: bool = True,
     debug_file: Optional[pathlib.Path] = None,
     midi_tempo: float = 120,
+    energy_tolerance: int = 11
 ) -> Tuple[
     Dict[str, np.array],
     pretty_midi.PrettyMIDI,
@@ -460,6 +461,7 @@ def predict(
             multiple_pitch_bends=multiple_pitch_bends,
             melodia_trick=melodia_trick,
             midi_tempo=midi_tempo,
+            energy_tolerance=energy_tolerance,
         )
 
     if debug_file:
@@ -507,6 +509,7 @@ def predict_and_save(
     debug_file: Optional[pathlib.Path] = None,
     sonification_samplerate: int = 44100,
     midi_tempo: float = 120,
+    energy_tolerance: int = 11
 ) -> None:
     """Make a prediction and save the results to file.
 
@@ -543,6 +546,7 @@ def predict_and_save(
                 melodia_trick,
                 debug_file,
                 midi_tempo,
+                energy_tolerance
             )
 
             if save_model_outputs:

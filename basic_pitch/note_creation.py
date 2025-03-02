@@ -55,6 +55,7 @@ def model_output_to_notes(
     multiple_pitch_bends: bool = False,
     melodia_trick: bool = True,
     midi_tempo: float = 120,
+    energy_tolerance: int = 11
 ) -> Tuple[pretty_midi.PrettyMIDI, List[Tuple[float, float, int, float, Optional[List[int]]]]]:
     """Convert model output to MIDI
 
@@ -93,6 +94,7 @@ def model_output_to_notes(
         min_freq=min_freq,
         max_freq=max_freq,
         melodia_trick=melodia_trick,
+        energy_tol=energy_tolerance
     )
     if include_pitch_bends:
         estimated_notes_with_pitch_bend = get_pitch_bends(contours, estimated_notes)
